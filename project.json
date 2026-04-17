@@ -1,0 +1,24 @@
+{
+  "overview": "A modern AI-powered multilingual duplicate record detection system with a glassmorphism UI, dark/light mode, and a full detection flow from upload to results.",
+  "features": [
+    "Landing page with hero, features showcase, and how-it-works flow",
+    "Drag-and-drop CSV/JSON upload or manual record entry",
+    "Language selector with 6+ languages",
+    "Animated processing loader with progress bar",
+    "Results cards with similarity scores, color coding, and matched word highlights",
+    "Dark/light mode toggle with localStorage persistence",
+    "Responsive design for mobile and desktop",
+    "Glassmorphism design with blue/purple AI theme"
+  ],
+  "category": "productivity",
+  "tags": [
+    "ai",
+    "nlp",
+    "duplicate-detection",
+    "multilingual",
+    "glassmorphism",
+    "dark-mode",
+    "responsive"
+  ],
+  "last_updated": "2026-04-17T14:25:25.779Z"
+}
