@@ -106,7 +106,7 @@ export function ResultsPanel() {
 
   return (
     <div
-      className="max-w-5xl mx-auto px-4 sm:px-6 space-y-8"
+      className="mx-auto max-w-5xl space-y-8 px-4 sm:px-6"
       data-ocid="results.panel"
     >
       {/* Header */}
@@ -116,7 +116,7 @@ export function ResultsPanel() {
         transition={{ duration: 0.5 }}
         className="space-y-5"
       >
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="font-display text-3xl sm:text-4xl font-bold">
               Detection <span className="text-accent-ai">Results</span>
@@ -128,7 +128,7 @@ export function ResultsPanel() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <ExportButton onClick={handleExport} />
             <Button
               variant="outline"
@@ -144,7 +144,7 @@ export function ResultsPanel() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -173,7 +173,7 @@ export function ResultsPanel() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center justify-between"
+          className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
         >
           <p className="text-sm text-muted-foreground">
             Showing{" "}

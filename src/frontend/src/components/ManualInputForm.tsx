@@ -89,7 +89,7 @@ export function ManualInputForm() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       onSubmit={handleSubmit}
-      className="glass-card p-8 rounded-2xl space-y-6"
+      className="glass-card space-y-6 rounded-2xl p-5 sm:p-8"
       data-ocid="manual-input.form"
     >
       {/* Record Name */}

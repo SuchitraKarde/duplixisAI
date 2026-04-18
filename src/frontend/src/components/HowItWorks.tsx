@@ -54,7 +54,7 @@ export function HowItWorks() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="text-center mb-16 space-y-4"
+        className="mb-12 space-y-4 text-center sm:mb-16"
       >
         <Badge
           variant="secondary"
@@ -62,13 +62,17 @@ export function HowItWorks() {
         >
           4-Stage Pipeline
         </Badge>
-        <h2 className="font-display text-4xl sm:text-5xl font-bold">
+        <h2 className="font-display text-3xl font-bold sm:text-5xl">
           How It <span className="text-accent-ai">Works</span>
         </h2>
+        <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
+          From raw multilingual data to actionable duplicate groups in under two
+          seconds.
+        </p>
       </motion.div>
 
       {/* Steps */}
-      <div className="relative grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="relative grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {/* Connector line (desktop) */}
         <div
           className="hidden lg:block absolute top-14 left-[12.5%] right-[12.5%] h-px z-0"

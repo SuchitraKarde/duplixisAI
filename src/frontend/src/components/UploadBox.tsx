@@ -100,7 +100,7 @@ export function UploadBox() {
         onDrop={handleDrop}
         data-ocid="upload.dropzone"
         className={cn(
-          "relative rounded-2xl border-2 border-dashed p-10 text-center transition-smooth cursor-pointer select-none overflow-hidden block",
+          "relative block cursor-pointer select-none overflow-hidden rounded-2xl border-2 border-dashed p-6 text-center transition-smooth sm:p-10",
           isDragging
             ? "border-primary bg-primary/10 scale-[1.01] shadow-xl shadow-primary/20"
             : selectedFile
@@ -151,7 +151,7 @@ export function UploadBox() {
               </div>
 
               <div>
-                <p className="font-display font-semibold text-foreground truncate max-w-xs mx-auto">
+                <p className="mx-auto max-w-full truncate px-2 font-display font-semibold text-foreground sm:max-w-xs">
                   {selectedFile.name}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -206,7 +206,7 @@ export function UploadBox() {
                 </p>
               </div>
 
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 {(
                   [
                     { label: "CSV", Icon: FileSpreadsheet },

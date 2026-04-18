@@ -27,7 +27,7 @@ export function SearchFilter() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
-      className="flex flex-col sm:flex-row gap-3"
+      className="flex flex-col gap-3 lg:flex-row"
       data-ocid="results.filters.section"
     >
       {/* Search input */}
@@ -49,7 +49,7 @@ export function SearchFilter() {
         onValueChange={(v) => setLanguageFilter(v as Language | "all")}
       >
         <SelectTrigger
-          className="w-full sm:w-44 glass-card"
+          className="w-full glass-card lg:w-44"
           data-ocid="results.language.select"
           aria-label="Filter by language"
         >
@@ -73,7 +73,7 @@ export function SearchFilter() {
         }
       >
         <SelectTrigger
-          className="w-full sm:w-44 glass-card"
+          className="w-full glass-card lg:w-44"
           data-ocid="results.similarity.select"
           aria-label="Filter by similarity level"
         >

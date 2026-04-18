@@ -91,9 +91,9 @@ export function ResultsCard({ group, index }: ResultsCardProps) {
       data-ocid={ocid}
     >
       {/* Card header */}
-      <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-border bg-muted/20">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <span className="font-display font-semibold text-foreground whitespace-nowrap">
+      <div className="flex flex-col gap-3 border-b border-border bg-muted/20 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <span className="font-display font-semibold text-foreground">
             Duplicate Match
           </span>
           <Badge
@@ -105,8 +105,8 @@ export function ResultsCard({ group, index }: ResultsCardProps) {
             {simLabel}
           </Badge>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="font-display font-bold text-xl text-foreground">
+        <div className="flex items-center gap-2 self-start shrink-0 sm:self-auto">
+          <span className="font-display text-lg font-bold text-foreground sm:text-xl">
             {topScore}%
           </span>
           <span
@@ -205,13 +205,13 @@ export function ResultsCard({ group, index }: ResultsCardProps) {
       </div>
 
       {/* Actions */}
-      <div className="px-5 sm:px-6 py-4 border-t border-border bg-muted/10 flex items-center justify-end gap-3">
+      <div className="flex flex-col gap-3 border-t border-border bg-muted/10 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
         <Button
           variant="outline"
           size="sm"
           onClick={handleDismiss}
           data-ocid={`results.dismiss_button.${index}`}
-          className="text-muted-foreground hover:text-foreground"
+          className="w-full text-muted-foreground hover:text-foreground sm:w-auto"
         >
           Dismiss
         </Button>
@@ -219,7 +219,7 @@ export function ResultsCard({ group, index }: ResultsCardProps) {
           size="sm"
           onClick={handleMerge}
           data-ocid={`results.merge_button.${index}`}
-          className="btn-primary border-0 text-primary-foreground text-xs"
+          className="btn-primary w-full border-0 text-xs text-primary-foreground sm:w-auto"
         >
           Merge Records
         </Button>
