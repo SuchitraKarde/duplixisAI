@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Duplixis AI - System Architecture</title>
+    <style>
+      :root {
+        --bg: #fcfbff;
+        --grid: rgba(98, 88, 173, 0.08);
+        --text: #2b2740;
+        --muted: #716b8b;
+        --client: #cfc4ff;
+        --client-dark: #7c6fe0;
+        --app: #b9f0de;
+        --app-dark: #23a885;
+        --core: #f7c4da;
+        --core-dark: #df4c84;
+        --data: #b8d9ff;
+        --data-dark: #3686dd;
+        --future: #f6dfaf;
+        --future-dark: #bf8124;
+        --panel: rgba(255, 255, 255, 0.74);
+        --border: rgba(78, 65, 138, 0.18);
+        --shadow: 0 18px 50px rgba(52, 42, 102, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Inter", sans-serif;
+        color: var(--text);
+        background:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+          var(--bg);
+        background-size: 44px 44px, 44px 44px, auto;
+      }
+
+      .page {
+        max-width: 1460px;
+        margin: 0 auto;
+        padding: 28px 28px 40px;
+      }
+
+      .hero {
+        text-align: center;
+        margin-bottom: 26px;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: clamp(28px, 3.2vw, 48px);
+        letter-spacing: 0.02em;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .board {
+        background: rgba(255, 255, 255, 0.52);
+        border: 1px solid rgba(90, 74, 158, 0.12);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 18px 18px 22px;
+        backdrop-filter: blur(10px);
+      }
+
+      .lane-grid {
+        display: grid;
+        grid-template-columns: 1fr 52px 1fr 52px 1fr 52px 1fr;
+        gap: 12px 0;
+        align-items: stretch;
+      }
+
+      .lane-title {
+        border-radius: 999px;
+        padding: 12px 18px;
+        text-align: center;
+        font-weight: 700;
+        font-size: 22px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      .lane-title.client {
+        background: var(--client);
+      }
+
+      .lane-title.app {
+        background: var(--app);
+      }
+
+      .lane-title.core {
+        background: var(--core);
+      }
+
+      .lane-title.data {
+        background: var(--data);
+      }
+
+      .lane-shell {
+        min-height: 1060px;
+        background: var(--panel);
+        border-radius: 24px;
+        border: 2px solid var(--border);
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: relative;
+      }
+
+      .lane-shell::before {
+        content: attr(data-stack);
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+        margin: 2px 0 8px;
+      }
+
+      .card {
+        border-radius: 18px;
+        padding: 18px 16px;
+        border: 1px solid rgba(66, 52, 125, 0.16);
+        background: white;
+        min-height: 132px;
+        position: relative;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        border-radius: 18px 18px 0 0;
+      }
+
+      .card.client {
+        background: rgba(207, 196, 255, 0.55);
+      }
+
+      .card.client::before {
+        background: var(--client-dark);
+      }
+
+      .card.app {
+        background: rgba(185, 240, 222, 0.72);
+      }
+
+      .card.app::before {
+        background: var(--app-dark);
+      }
+
+      .card.core {
+        background: rgba(247, 196, 218, 0.72);
+      }
+
+      .card.core::before {
+        background: var(--core-dark);
+      }
+
+      .card.data {
+        background: rgba(184, 217, 255, 0.72);
+      }
+
+      .card.data::before {
+        background: var(--data-dark);
+      }
+
+      .card.future {
+        background: rgba(246, 223, 175, 0.74);
+      }
+
+      .card.future::before {
+        background: var(--future-dark);
+      }
+
+      .card h3 {
+        margin: 18px 0 8px;
+        font-size: 28px;
+        line-height: 1.1;
+      }
+
+      .card p {
+        margin: 0;
+        color: #5f5878;
+        line-height: 1.45;
+        font-size: 16px;
+      }
+
+      .card small {
+        display: block;
+        margin-top: 10px;
+        color: #766f92;
+        font-size: 14px;
+      }
+
+      .pill {
+        margin-top: auto;
+        align-self: center;
+        border-radius: 999px;
+        padding: 11px 18px;
+        min-width: 68%;
+        text-align: center;
+        color: white;
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .pill.client {
+        background: var(--client-dark);
+      }
+
+      .pill.app {
+        background: var(--app-dark);
+      }
+
+      .pill.core {
+        background: var(--core-dark);
+      }
+
+      .pill.data {
+        background: var(--data-dark);
+      }
+
+      .arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .arrow svg {
+        width: 100%;
+        height: 34px;
+        overflow: visible;
+      }
+
+      .arrow line {
+        stroke-width: 3;
+      }
+
+      .arrow.client-app line,
+      .arrow.client-app path {
+        stroke: #24a37f;
+        fill: #24a37f;
+      }
+
+      .arrow.app-core line,
+      .arrow.app-core path {
+        stroke: #df4c84;
+        fill: #df4c84;
+      }
+
+      .arrow.core-data line,
+      .arrow.core-data path {
+        stroke: #3686dd;
+        fill: #3686dd;
+      }
+
+      .future-row {
+        display: flex;
+        justify-content: center;
+        margin: 14px 0 0;
+      }
+
+      .future-card {
+        width: min(360px, 92%);
+      }
+
+      .future-link {
+        display: flex;
+        justify-content: center;
+        margin-top: -4px;
+      }
+
+      .future-link svg {
+        width: 110px;
+        height: 46px;
+      }
+
+      .legend {
+        margin-top: 24px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid rgba(83, 68, 143, 0.15);
+        padding: 18px 22px;
+      }
+
+      .legend h2 {
+        margin: 0 0 16px;
+        text-align: center;
+        font-size: 24px;
+      }
+
+      .legend-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 15px;
+        color: #564f70;
+      }
+
+      .legend-swatch {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .legend-line {
+        width: 40px;
+        height: 0;
+        border-top: 3px solid;
+        position: relative;
+      }
+
+      .legend-line::after {
+        content: "";
+        position: absolute;
+        right: -1px;
+        top: -5px;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-left: 9px solid currentColor;
+      }
+
+      .footnote {
+        margin-top: 16px;
+        text-align: center;
+        color: #7e7898;
+        font-size: 13px;
+      }
+
+      @media (max-width: 1200px) {
+        .lane-grid {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+
+        .arrow {
+          display: none;
+        }
+
+        .lane-shell {
+          min-height: auto;
+        }
+
+        .legend-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .page {
+          padding: 18px 14px 28px;
+        }
+
+        .legend-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .card h3 {
+          font-size: 23px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <h1>Duplixis AI - System Architecture</h1>
+        <p>
+          Multilingual Duplicate Detection · React + Zustand + ICP-ready
+          structure
+        </p>
+      </header>
+
+      <section class="board">
+        <div class="lane-grid">
+          <div class="lane-title client">Client layer</div>
+          <div></div>
+          <div class="lane-title app">Application flow</div>
+          <div></div>
+          <div class="lane-title core">Core services</div>
+          <div></div>
+          <div class="lane-title data">Platform / data</div>
+
+          <div class="lane-shell" data-stack="React 19 · Tailwind CSS · Motion">
+            <article class="card client">
+              <h3>Landing page UI</h3>
+              <p>Hero section, feature cards, architecture story, CTA flow.</p>
+            </article>
+            <article class="card client">
+              <h3>Detect page</h3>
+              <p>Mode switch between file upload and manual entry.</p>
+            </article>
+            <article class="card client">
+              <h3>Input capture</h3>
+              <p>CSV / JSON upload, drag-and-drop, or manual record form.</p>
+            </article>
+            <article class="card client">
+              <h3>Results dashboard</h3>
+              <p>Duplicate groups, similarity scores, export, reset, filters.</p>
+            </article>
+            <article class="card client">
+              <h3>Theme + responsiveness</h3>
+              <p>Dark/light UI, responsive layout, polished motion states.</p>
+            </article>
+            <div class="pill client">Deploy: Vite frontend</div>
+          </div>
+
+          <div class="arrow client-app">
+            <svg viewBox="0 0 80 34" aria-hidden="true">
+              <line x1="8" y1="17" x2="68" y2="17"></line>
+              <path d="M68 9 L78 17 L68 25 Z"></path>
+            </svg>
+          </div>
+
+          <div class="lane-shell" data-stack="TanStack Router · Zustand · Persist">
+            <article class="card app">
+              <h3>App router</h3>
+              <p>Routes users between landing, detect, and shared layout shell.</p>
+            </article>
+            <article class="card app">
+              <h3>View orchestration</h3>
+              <p>Switches between input, processing, and results states.</p>
+            </article>
+            <article class="card app">
+              <h3>Input validation</h3>
+              <p>Checks file type, field completeness, and user flow readiness.</p>
+            </article>
+            <article class="card app">
+              <h3>Zustand store</h3>
+              <p>Tracks processing progress, duplicate results, search, and filters.</p>
+            </article>
+            <article class="card app">
+              <h3>Persist middleware</h3>
+              <p>Stores theme preference and keeps the UI experience consistent.</p>
+            </article>
+            <div class="pill app">Client state + orchestration</div>
+          </div>
+
+          <div class="arrow app-core">
+            <svg viewBox="0 0 80 34" aria-hidden="true">
+              <line x1="8" y1="17" x2="68" y2="17"></line>
+              <path d="M68 9 L78 17 L68 25 Z"></path>
+            </svg>
+          </div>
+
+          <div class="lane-shell" data-stack="Frontend logic today · ICP-ready tomorrow">
+            <article class="card core">
+              <h3>Navigation actions</h3>
+              <p>CTA actions send users into the detection workflow clearly.</p>
+            </article>
+            <article class="card core">
+              <h3>Processing orchestrator</h3>
+              <p>Runs the duplicate-detection experience as a guided pipeline.</p>
+            </article>
+            <article class="card core">
+              <h3>Mock detection engine</h3>
+              <p>Simulates language detection, semantic matching, and clustering.</p>
+              <small>Current implementation</small>
+            </article>
+            <article class="card core">
+              <h3>Similarity grouping</h3>
+              <p>Builds duplicate groups, confidence scores, and ranked matches.</p>
+            </article>
+            <article class="card core">
+              <h3>ICP actor integration</h3>
+              <p>Ready point where real backend calls can replace the mock engine.</p>
+              <small>Future live processing path</small>
+            </article>
+            <div class="pill core">Detection + matching services</div>
+          </div>
+
+          <div class="arrow core-data">
+            <svg viewBox="0 0 80 34" aria-hidden="true">
+              <line x1="8" y1="17" x2="68" y2="17"></line>
+              <path d="M68 9 L78 17 L68 25 Z"></path>
+            </svg>
+          </div>
+
+          <div class="lane-shell" data-stack="Browser runtime · Generated bindings · Motoko stub">
+            <article class="card data">
+              <h3>Layout shell</h3>
+              <p>Navbar, footer, theme provider, and shared application frame.</p>
+            </article>
+            <article class="card data">
+              <h3>Processing state</h3>
+              <p>In-memory processing flags and progress-step labels for the UI.</p>
+            </article>
+            <article class="card data">
+              <h3>Mock records + steps</h3>
+              <p>Seed data, sample duplicate groups, and progress-step definitions.</p>
+            </article>
+            <article class="card data">
+              <h3>Generated ICP client</h3>
+              <p>Typed frontend binding in <code>src/frontend/src/backend.ts</code>.</p>
+            </article>
+            <article class="card data">
+              <h3>Motoko canister</h3>
+              <p>Backend actor scaffold in <code>src/backend/main.mo</code>.</p>
+              <small>Stub today, ready for real methods later</small>
+            </article>
+            <div class="pill data">Runtime + backend integration</div>
+          </div>
+        </div>
+
+        <div class="future-link">
+          <svg viewBox="0 0 110 46" aria-hidden="true">
+            <line
+              x1="55"
+              y1="0"
+              x2="55"
+              y2="36"
+              stroke="#bf8124"
+              stroke-width="3"
+              stroke-dasharray="7 7"
+            ></line>
+            <path d="M47 36 L55 46 L63 36 Z" fill="#bf8124"></path>
+          </svg>
+        </div>
+
+        <div class="future-row">
+          <article class="card future future-card">
+            <h3>Future production backend</h3>
+            <p>
+              Replace the mock detection engine with real multilingual NLP,
+              persistent storage, and canister-backed processing.
+            </p>
+          </article>
+        </div>
+
+        <section class="legend">
+          <h2>Legend</h2>
+          <div class="legend-grid">
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--client)"></span>
+              <span>Client experience</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--app)"></span>
+              <span>Application control layer</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--core)"></span>
+              <span>Detection and matching services</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--data)"></span>
+              <span>Runtime, bindings, and backend</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="color: #24a37f"></span>
+              <span>User interaction into app flow</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="color: #df4c84"></span>
+              <span>State and service orchestration</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line" style="color: #3686dd"></span>
+              <span>Runtime / data / integration handoff</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-swatch" style="background: var(--future)"></span>
+              <span>Future production extension</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <p class="footnote">
+        Duplixis AI architecture view · current frontend implementation +
+        future ICP-ready backend path
+      </p>
+    </main>
+  </body>
+</html>

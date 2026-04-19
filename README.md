@@ -1,2 +1,3 @@
-# dupelens-ai
-Exported from Caffeine project: DupeLens AI
+# duplixisAI
+
+Frontend and backend code for the `duplixisAI` multilingual duplicate detection project.

@@ -1,5 +1,5 @@
 {
-  "name": "@caffeine/template-app",
+  "name": "duplixisai",
   "type": "module",
   "engines": {
     "node": ">=16.0.0",
@@ -10,13 +10,9 @@
     "build": "pnpm -r --if-present run build",
     "typecheck": "pnpm -r --if-present run typecheck",
     "check": "pnpm -r --if-present run check",
-    "fix": "pnpm -r --if-present run fix",
-    "bindgen": "caffeine-bindgen --did-file ./src/backend/dist/backend.did --out-dir ./src/frontend/src --actor-interface-file --force"
+    "fix": "pnpm -r --if-present run fix"
   },
   "devDependencies": {
     "sharp": "^0.34.4"
-  },
-  "dependencies": {
-    "@caffeineai/core-infrastructure": "^0.2.0"
   }
 }
