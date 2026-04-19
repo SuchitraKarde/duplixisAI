@@ -9,9 +9,6 @@ const STEPS = [
     title: "Upload Records",
     description:
       "Upload CSV/JSON or enter records manually. We accept any text data in any language - no preprocessing needed.",
-    color: "text-primary",
-    iconBg: "from-primary/25 to-primary/5",
-    accent: "oklch(0.68 0.22 280 / 0.6)",
   },
   {
     step: 2,
@@ -19,9 +16,6 @@ const STEPS = [
     title: "Translate & Embed",
     description:
       "Our multilingual model translates and generates semantic vector embeddings for every record instantly.",
-    color: "text-accent",
-    iconBg: "from-accent/25 to-accent/5",
-    accent: "oklch(0.72 0.2 290 / 0.6)",
   },
   {
     step: 3,
@@ -29,9 +23,6 @@ const STEPS = [
     title: "Compare",
     description:
       "Vector similarity search identifies near-duplicates across all language pairs simultaneously at scale.",
-    color: "text-chart-2",
-    iconBg: "from-chart-2/25 to-chart-2/5",
-    accent: "oklch(0.68 0.2 280 / 0.5)",
   },
   {
     step: 4,
@@ -39,9 +30,6 @@ const STEPS = [
     title: "Results",
     description:
       "Duplicate groups ranked by confidence score with highlighted matches, similarity badges, and merge actions.",
-    color: "text-chart-1",
-    iconBg: "from-chart-1/25 to-chart-1/5",
-    accent: "oklch(0.62 0.24 135 / 0.6)",
   },
 ] as const;
 
@@ -91,7 +79,7 @@ export function HowItWorks() {
             data-ocid={`how-it-works.step.${step.step}`}
           >
             <div
-              className={`mb-1 text-[10px] font-bold uppercase tracking-widest ${step.color}`}
+              className="mb-1 text-[10px] font-bold uppercase tracking-widest text-primary"
             >
               Step {step.step}
             </div>
@@ -99,12 +87,12 @@ export function HowItWorks() {
             <motion.div
               whileHover={{ scale: 1.08 }}
               transition={{ type: "spring", stiffness: 300 }}
-              className={`relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br ${step.iconBg} glass-card`}
-              style={{ boxShadow: `0 0 0 1px ${step.accent}` }}
+              className="glass-card relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-primary/25 to-primary/5"
+              style={{ boxShadow: "0 0 0 1px oklch(0.68 0.22 280 / 0.6)" }}
             >
               <motion.div
                 className="absolute inset-0 rounded-2xl"
-                style={{ border: `1px solid ${step.accent}` }}
+                style={{ border: "1px solid oklch(0.68 0.22 280 / 0.6)" }}
                 animate={{ scale: [1, 1.12], opacity: [0.5, 0] }}
                 transition={{
                   duration: 2.5,
@@ -113,7 +101,7 @@ export function HowItWorks() {
                   delay: i * 0.5,
                 }}
               />
-              <step.icon className={`h-10 w-10 ${step.color}`} />
+              <step.icon className="h-10 w-10 text-primary" />
             </motion.div>
 
             <h3 className="font-display text-base font-semibold leading-snug text-foreground">
