@@ -7,6 +7,7 @@
     "npm": "please use pnpm"
   },
   "scripts": {
+    "backend": "python src/backend/server.py",
     "build": "pnpm -r --if-present run build",
     "typecheck": "pnpm -r --if-present run typecheck",
     "check": "pnpm -r --if-present run check",
