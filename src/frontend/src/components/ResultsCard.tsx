@@ -8,9 +8,9 @@ import {
   getSimilarityLevel,
 } from "@/lib/utils";
 import type { SimilarityGroup } from "@/types";
-import { Eye, Merge, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, Merge, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 function HighlightedText({
@@ -64,10 +64,17 @@ export function ResultsCard({
   const level = getSimilarityLevel(topScore);
   const simClass = getSimilarityClass(topScore);
   const simLabel = getSimilarityLabel(topScore);
+  const [isMatchesOpen, setIsMatchesOpen] = useState(false);
   const [isReviewing, setIsReviewing] = useState(false);
   const [recordsMarkedForDeletion, setRecordsMarkedForDeletion] = useState<
     string[]
   >([]);
+
+  useEffect(() => {
+    if (isReviewing) {
+      setIsMatchesOpen(true);
+    }
+  }, [isReviewing]);
 
   const indicatorColor =
     level === "high"
@@ -207,86 +214,110 @@ export function ResultsCard({
         </div>
 
         <div className="space-y-3 p-5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Potential Matches
-            </span>
-            <span className="text-base">
-              {getLanguageFlag(similar[0]?.record.language ?? "en")}
-            </span>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Potential Matches
+              </span>
+              <span className="text-base">
+                {getLanguageFlag(similar[0]?.record.language ?? "en")}
+              </span>
+              <Badge className="border-0 bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                {similar.length} record{similar.length === 1 ? "" : "s"}
+              </Badge>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMatchesOpen((value) => !value)}
+              className="w-full shrink-0 sm:w-auto"
+              data-ocid={`results.matches_toggle.${index}`}
+            >
+              <ChevronDown
+                className={cn(
+                  "mr-2 h-4 w-4 transition-transform",
+                  isMatchesOpen && "rotate-180",
+                )}
+              />
+              {isMatchesOpen ? "Hide duplicate records" : "See duplicate records"}
+            </Button>
           </div>
 
-          <div className="space-y-3">
-            {similar.map((s, si) => {
-              const markedForDeletion = recordsMarkedForDeletion.includes(
-                s.record.id,
-              );
+          {isMatchesOpen && (
+            <div className="space-y-3">
+              {similar.map((s, si) => {
+                const markedForDeletion = recordsMarkedForDeletion.includes(
+                  s.record.id,
+                );
 
-              return (
-                <div
-                  key={s.record.id}
-                  className={cn(
-                    "space-y-1 pb-3",
-                    si < similar.length - 1 && "border-b border-border/60",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                        <span className="text-xs">
-                          {getLanguageFlag(s.record.language)}
-                        </span>
-                        <span className="font-mono text-xs uppercase text-muted-foreground">
-                          {s.record.language}
-                        </span>
-                        {isReviewing && (
-                          <Badge
-                            className={cn(
-                              "border-0",
-                              markedForDeletion
-                                ? "bg-destructive/15 text-destructive"
-                                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
-                            )}
-                          >
-                            {markedForDeletion ? "Will delete" : "Will keep"}
-                          </Badge>
+                return (
+                  <div
+                    key={s.record.id}
+                    className={cn(
+                      "space-y-1 pb-3",
+                      si < similar.length - 1 && "border-b border-border/60",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                          <span className="text-xs">
+                            {getLanguageFlag(s.record.language)}
+                          </span>
+                          <span className="font-mono text-xs uppercase text-muted-foreground">
+                            {s.record.language}
+                          </span>
+                          {isReviewing && (
+                            <Badge
+                              className={cn(
+                                "border-0",
+                                markedForDeletion
+                                  ? "bg-destructive/15 text-destructive"
+                                  : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+                              )}
+                            >
+                              {markedForDeletion ? "Will delete" : "Will keep"}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="break-words text-sm font-medium leading-relaxed text-foreground">
+                          <HighlightedText
+                            text={s.record.name}
+                            tokens={s.matchedTokens}
+                          />
+                        </p>
+                        <p className="line-clamp-1 text-xs text-muted-foreground">
+                          <HighlightedText
+                            text={s.record.description}
+                            tokens={s.matchedTokens}
+                          />
+                        </p>
+                        {s.translatedName && (
+                          <p className="text-xs italic text-muted-foreground opacity-70">
+                            ~ {s.translatedName}
+                          </p>
                         )}
                       </div>
-                      <p className="break-words text-sm font-medium leading-relaxed text-foreground">
-                        <HighlightedText
-                          text={s.record.name}
-                          tokens={s.matchedTokens}
-                        />
-                      </p>
-                      <p className="line-clamp-1 text-xs text-muted-foreground">
-                        <HighlightedText
-                          text={s.record.description}
-                          tokens={s.matchedTokens}
-                        />
-                      </p>
-                      {s.translatedName && (
-                        <p className="text-xs italic text-muted-foreground opacity-70">
-                          â‰ˆ {s.translatedName}
-                        </p>
+
+                      {isReviewing && (
+                        <Button
+                          type="button"
+                          variant={markedForDeletion ? "outline" : "destructive"}
+                          size="sm"
+                          onClick={() => toggleRecordDecision(s.record.id)}
+                          className="shrink-0 self-start"
+                        >
+                          {markedForDeletion ? "Keep" : "Delete"}
+                        </Button>
                       )}
                     </div>
-
-                    {isReviewing && (
-                      <Button
-                        type="button"
-                        variant={markedForDeletion ? "outline" : "destructive"}
-                        size="sm"
-                        onClick={() => toggleRecordDecision(s.record.id)}
-                        className="shrink-0 self-start"
-                      >
-                        {markedForDeletion ? "Keep" : "Delete"}
-                      </Button>
-                    )}
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
