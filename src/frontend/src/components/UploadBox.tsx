@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { MOCK_DETECTION_RESULT, PROCESSING_STEPS } from "@/data/mockData";
+import { PROCESSING_STEPS } from "@/data/mockData";
+import { detectDuplicatesFromFile } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import {
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
 
 export function UploadBox() {
   const [isDragging, setIsDragging] = useState(false);
@@ -67,23 +69,48 @@ export function UploadBox() {
   };
 
   const runDetection = async () => {
-    setIsProcessing(true);
-    setProcessingProgress(0, PROCESSING_STEPS[0]);
-
-    for (let i = 0; i < PROCESSING_STEPS.length; i++) {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, 2800 / PROCESSING_STEPS.length),
-      );
-      const pct = Math.round(((i + 1) / PROCESSING_STEPS.length) * 100);
-      setProcessingProgress(
-        pct,
-        PROCESSING_STEPS[Math.min(i + 1, PROCESSING_STEPS.length - 1)],
-      );
+    if (!selectedFile) {
+      return;
     }
 
-    await new Promise<void>((resolve) => setTimeout(resolve, 300));
-    setDetectionResults(MOCK_DETECTION_RESULT);
-    setIsProcessing(false);
+    setIsProcessing(true);
+    setProcessingProgress(5, PROCESSING_STEPS[0]);
+
+    const progressTimer = window.setInterval(() => {
+      useAppStore.setState((state) => {
+        const next = Math.min(state.processingProgress + 14, 92);
+        const stepIndex = Math.min(
+          Math.floor((next / 100) * PROCESSING_STEPS.length),
+          PROCESSING_STEPS.length - 1,
+        );
+        return {
+          processingProgress: next,
+          processingStep: PROCESSING_STEPS[stepIndex],
+        };
+      });
+    }, 350);
+
+    try {
+      const content = await selectedFile.text();
+      const result = await detectDuplicatesFromFile({
+        filename: selectedFile.name,
+        content,
+      });
+      window.clearInterval(progressTimer);
+      setProcessingProgress(100, "Finalizing report...");
+      setDetectionResults(result);
+      setIsProcessing(false);
+    } catch (error) {
+      window.clearInterval(progressTimer);
+      setIsProcessing(false);
+      setProcessingProgress(0, "");
+      const message =
+        error instanceof Error ? error.message : "Detection failed.";
+      setFileError(message);
+      toast.error("Detection failed", {
+        description: message,
+      });
+    }
   };
 
   const FileIcon = selectedFile?.name.endsWith(".json")

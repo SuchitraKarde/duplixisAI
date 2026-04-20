@@ -140,8 +140,23 @@ export const MOCK_SIMILARITY_GROUPS: SimilarityGroup[] = [
   },
 ];
 
+const MOCK_SOURCE_RECORDS = MOCK_SIMILARITY_GROUPS.flatMap((group) => [
+  group.original,
+  ...group.similar.map((item) => item.record),
+]);
+
+const MOCK_DUPLICATE_IDS = new Set(
+  MOCK_SIMILARITY_GROUPS.flatMap((group) =>
+    group.similar.map((item) => item.record.id),
+  ),
+);
+
 // Full mock detection result
 export const MOCK_DETECTION_RESULT: DuplicateResult = {
+  sourceRecords: MOCK_SOURCE_RECORDS,
+  cleanedRecords: MOCK_SOURCE_RECORDS.filter(
+    (record) => !MOCK_DUPLICATE_IDS.has(record.id),
+  ),
   groups: MOCK_SIMILARITY_GROUPS,
   totalRecordsAnalyzed: 247,
   duplicatesFound: MOCK_SIMILARITY_GROUPS.reduce(

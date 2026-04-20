@@ -8,15 +8,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { LANGUAGE_OPTIONS } from "@/data/languages";
 import { cn, formatProcessingTime, getSimilarityLevel } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
-import type { DuplicateResult, Language, SimilarityGroup } from "@/types";
+import type { DuplicateResult, Language, RecordEntry, SimilarityGroup } from "@/types";
 import {
   AlertCircle,
   CheckCheck,
   ChevronDown,
   Download,
+  MessageSquarePlus,
   Search,
   SlidersHorizontal,
   TrendingUp,
@@ -26,6 +28,8 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 type ExportFormat = "json" | "csv";
+type ExportMode = "matches" | "deduplicated";
+type FeedbackCategory = "accurate" | "missed-match" | "false-positive" | "ux";
 
 const EXPORT_LANGUAGE_LABELS: Record<Language, string> = {
   en: "English",
@@ -70,6 +74,47 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function deriveCleanedRecords(
+  sourceRecords: RecordEntry[] | undefined,
+  groups: SimilarityGroup[],
+): RecordEntry[] {
+  if (!sourceRecords?.length) {
+    return [];
+  }
+
+  const duplicateIds = new Set(
+    groups.flatMap((group) => group.similar.map((item) => item.record.id)),
+  );
+  return sourceRecords.filter((record) => !duplicateIds.has(record.id));
+}
+
+function buildRecordsCsv(records: RecordEntry[]) {
+  const header = [
+    "ID",
+    "Name",
+    "Description",
+    "Language",
+    "Tags",
+    "Created At",
+  ];
+  const rows = records.map((record) => [
+    record.id,
+    record.name,
+    record.description,
+    record.language,
+    (record.tags ?? []).join("|"),
+    record.createdAt ?? "",
+  ]);
+
+  return [header, ...rows]
+    .map((row) =>
+      row
+        .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+        .join(","),
+    )
+    .join("\n");
+}
+
 export function ResultsPanel() {
   const {
     detectionResults,
@@ -84,7 +129,12 @@ export function ResultsPanel() {
   const [results, setResults] = useState<DuplicateResult | null>(detectionResults);
   const [selectedExportFormat, setSelectedExportFormat] =
     useState<ExportFormat | null>(null);
+  const [exportMode, setExportMode] = useState<ExportMode>("matches");
   const [exportLanguage, setExportLanguage] = useState<Language>("en");
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackCategory, setFeedbackCategory] =
+    useState<FeedbackCategory>("accurate");
+  const [feedbackComment, setFeedbackComment] = useState("");
 
   useEffect(() => {
     setResults(detectionResults);
@@ -94,6 +144,11 @@ export function ResultsPanel() {
 
   const { groups, totalRecordsAnalyzed, duplicatesFound, processingTimeMs } =
     results;
+  const sourceRecords = results.sourceRecords ?? [];
+  const cleanedRecords =
+    results.cleanedRecords && results.cleanedRecords.length > 0
+      ? results.cleanedRecords
+      : deriveCleanedRecords(sourceRecords, groups);
 
   const filtered = groups.filter((g) => {
     const q = searchFilter.toLowerCase();
@@ -122,6 +177,8 @@ export function ResultsPanel() {
   const persistResults = (nextGroups: SimilarityGroup[]) => {
     const nextResults: DuplicateResult = {
       ...results,
+      sourceRecords,
+      cleanedRecords: deriveCleanedRecords(sourceRecords, nextGroups),
       groups: nextGroups,
       duplicatesFound: nextGroups.reduce(
         (count, group) => count + group.similar.length,
@@ -177,9 +234,20 @@ export function ResultsPanel() {
       return;
     }
 
-    persistResults([]);
+    const mergedOutput = deriveCleanedRecords(sourceRecords, groups);
+    const nextResults: DuplicateResult = {
+      ...results,
+      sourceRecords,
+      cleanedRecords: mergedOutput,
+      groups: [],
+      duplicatesFound: 0,
+    };
+
+    setResults(nextResults);
+    setDetectionResults(nextResults);
     toast.success("All duplicate records merged", {
-      description: "All duplicate groups were merged into their first record.",
+      description:
+        "The first record in each duplicate group was kept, duplicate records were removed, and the deduplicated file is now the final output.",
     });
   };
 
@@ -192,51 +260,101 @@ export function ResultsPanel() {
       duplicatesFound,
       processingTimeMs,
       groups,
+      cleanedRecords,
     }),
-    [duplicatesFound, exportLanguage, groups, processingTimeMs, totalRecordsAnalyzed],
+    [
+      cleanedRecords,
+      duplicatesFound,
+      exportLanguage,
+      groups,
+      processingTimeMs,
+      totalRecordsAnalyzed,
+    ],
   );
 
   const handleExport = () => {
     if (!selectedExportFormat) return;
 
     if (selectedExportFormat === "json") {
-      const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
+      const payload =
+        exportMode === "deduplicated"
+          ? {
+              exportLanguage,
+              exportLanguageLabel: EXPORT_LANGUAGE_LABELS[exportLanguage],
+              exportedAt: new Date().toISOString(),
+              totalRecordsAnalyzed,
+              cleanedRecords,
+            }
+          : exportPayload;
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
         type: "application/json",
       });
-      downloadBlob(blob, `duplixis-results-${exportLanguage}-${Date.now()}.json`);
-    } else {
-      const header = CSV_HEADER_TRANSLATIONS[exportLanguage];
-      const rows = groups.flatMap((group) =>
-        group.similar.map((item) => [
-          group.id,
-          group.original.id,
-          group.original.name,
-          group.original.description,
-          group.original.language,
-          item.record.id,
-          item.record.name,
-          item.record.description,
-          item.record.language,
-          `${group.topScore}%`,
-        ]),
+      downloadBlob(
+        blob,
+        `duplixis-${exportMode}-${exportLanguage}-${Date.now()}.json`,
       );
-
-      const csv = [header, ...rows]
-        .map((row) =>
-          row
-            .map((value) => `"${String(value).replace(/"/g, '""')}"`)
-            .join(","),
-        )
-        .join("\n");
+    } else {
+      const csv =
+        exportMode === "deduplicated"
+          ? buildRecordsCsv(cleanedRecords)
+          : [CSV_HEADER_TRANSLATIONS[exportLanguage], ...groups.flatMap((group) =>
+              group.similar.map((item) => [
+                group.id,
+                group.original.id,
+                group.original.name,
+                group.original.description,
+                group.original.language,
+                item.record.id,
+                item.record.name,
+                item.record.description,
+                item.record.language,
+                `${group.topScore}%`,
+              ]),
+            )]
+              .map((row) =>
+                row
+                  .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+                  .join(","),
+              )
+              .join("\n");
 
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      downloadBlob(blob, `duplixis-results-${exportLanguage}-${Date.now()}.csv`);
+      downloadBlob(
+        blob,
+        `duplixis-${exportMode}-${exportLanguage}-${Date.now()}.csv`,
+      );
     }
 
     toast.success("Export complete", {
-      description: `Downloaded ${selectedExportFormat.toUpperCase()} in ${EXPORT_LANGUAGE_LABELS[exportLanguage]}.`,
+      description: `Downloaded ${exportMode} ${selectedExportFormat.toUpperCase()} in ${EXPORT_LANGUAGE_LABELS[exportLanguage]}.`,
     });
     setSelectedExportFormat(null);
+  };
+
+  const handleSubmitFeedback = () => {
+    const entry = {
+      category: feedbackCategory,
+      comment: feedbackComment.trim(),
+      groupsShown: groups.length,
+      duplicatesFound,
+      submittedAt: new Date().toISOString(),
+    };
+
+    const existing = JSON.parse(
+      window.localStorage.getItem("duplixis-feedback") ?? "[]",
+    ) as typeof entry[];
+
+    window.localStorage.setItem(
+      "duplixis-feedback",
+      JSON.stringify([entry, ...existing]),
+    );
+
+    setFeedbackComment("");
+    setFeedbackCategory("accurate");
+    setShowFeedbackForm(false);
+    toast.success("Feedback captured", {
+      description: "Thanks. This can be wired to a backend or form endpoint later.",
+    });
   };
 
   const stats = [
@@ -295,6 +413,16 @@ export function ResultsPanel() {
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFeedbackForm((current) => !current)}
+              data-ocid="results.feedback.button"
+              className="flex items-center gap-2 glass-card"
+            >
+              <MessageSquarePlus className="h-4 w-4" />
+              Feedback
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -309,11 +437,37 @@ export function ResultsPanel() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="glass-card min-w-40">
-                <DropdownMenuItem onClick={() => setSelectedExportFormat("json")}>
-                  JSON
+                <DropdownMenuItem
+                  onClick={() => {
+                    setExportMode("matches");
+                    setSelectedExportFormat("json");
+                  }}
+                >
+                  Match Report JSON
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSelectedExportFormat("csv")}>
-                  CSV
+                <DropdownMenuItem
+                  onClick={() => {
+                    setExportMode("matches");
+                    setSelectedExportFormat("csv");
+                  }}
+                >
+                  Match Report CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setExportMode("deduplicated");
+                    setSelectedExportFormat("json");
+                  }}
+                >
+                  Deduplicated File JSON
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setExportMode("deduplicated");
+                    setSelectedExportFormat("csv");
+                  }}
+                >
+                  Deduplicated File CSV
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -329,10 +483,13 @@ export function ResultsPanel() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="space-y-1">
                 <p className="font-medium text-foreground">
-                  Export as {selectedExportFormat.toUpperCase()}
+                  Export {exportMode === "deduplicated" ? "deduplicated file" : "match report"} as{" "}
+                  {selectedExportFormat.toUpperCase()}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Choose the language label for the exported file.
+                  {exportMode === "deduplicated"
+                    ? `This file contains ${cleanedRecords.length} records after removing duplicate entries and keeping one representative record per duplicate group.`
+                    : "Choose the language label for the exported file."}
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -373,6 +530,74 @@ export function ResultsPanel() {
                     Download {selectedExportFormat.toUpperCase()}
                   </Button>
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {showFeedbackForm && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card rounded-2xl p-4"
+          >
+            <div className="flex flex-col gap-4">
+              <div className="space-y-1">
+                <p className="font-medium text-foreground">Share feedback</p>
+                <p className="text-sm text-muted-foreground">
+                  This is useful for demo reviews now, and can later be sent to a
+                  backend, email workflow, or analytics table.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {(
+                  [
+                    ["accurate", "Accurate result"],
+                    ["missed-match", "Missed duplicate"],
+                    ["false-positive", "False positive"],
+                    ["ux", "UI feedback"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFeedbackCategory(value)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-sm transition-smooth",
+                      feedbackCategory === value
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border bg-background/60 text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <Textarea
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                placeholder="What felt correct, confusing, missing, or worth improving?"
+                className="min-h-[110px]"
+              />
+
+              <div className="flex gap-2 self-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFeedbackForm(false)}
+                  className="glass-card"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSubmitFeedback}
+                  className="btn-primary border-0 text-primary-foreground"
+                >
+                  Submit Feedback
+                </Button>
               </div>
             </div>
           </motion.div>

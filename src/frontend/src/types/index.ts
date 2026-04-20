@@ -47,6 +47,8 @@ export interface SimilarityGroup {
 }
 
 export interface DuplicateResult {
+  sourceRecords: RecordEntry[];
+  cleanedRecords: RecordEntry[];
   groups: SimilarityGroup[];
   totalRecordsAnalyzed: number;
   duplicatesFound: number;

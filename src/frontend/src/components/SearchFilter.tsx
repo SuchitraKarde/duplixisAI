@@ -56,7 +56,7 @@ export function SearchFilter() {
           <SelectValue placeholder="All Languages" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">🌐 All Languages</SelectItem>
+          <SelectItem value="all">All Languages</SelectItem>
           {LANGUAGE_OPTIONS.map((lang) => (
             <SelectItem key={lang.code} value={lang.code}>
               {lang.flag} {lang.label}
