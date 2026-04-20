@@ -1,17 +1,19 @@
 {
   "name": "duplixisai",
   "type": "module",
+  "workspaces": [
+    "src/frontend"
+  ],
   "engines": {
-    "node": ">=16.0.0",
-    "pnpm": ">=7.0.0",
-    "npm": "please use pnpm"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "scripts": {
     "backend": "python src/backend/server.py",
-    "build": "pnpm -r --if-present run build",
-    "typecheck": "pnpm -r --if-present run typecheck",
-    "check": "pnpm -r --if-present run check",
-    "fix": "pnpm -r --if-present run fix"
+    "build": "npm run build --workspace src/frontend",
+    "typecheck": "npm run typecheck --workspace src/frontend",
+    "check": "npm run check --workspace src/frontend",
+    "fix": "npm run fix --workspace src/frontend"
   },
   "devDependencies": {
     "sharp": "^0.34.4"

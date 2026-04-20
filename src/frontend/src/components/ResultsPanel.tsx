@@ -197,10 +197,6 @@ export function ResultsPanel() {
     persistResults(groups.filter((group) => group.id !== groupId));
   };
 
-  const handleDeleteDuplicates = (groupId: string) => {
-    persistResults(groups.filter((group) => group.id !== groupId));
-  };
-
   const handleReviewDecisions = (
     groupId: string,
     recordIdsToDelete: string[],
@@ -658,7 +654,6 @@ export function ResultsPanel() {
               index={i + 1}
               onDismiss={handleDismissGroup}
               onMerge={handleMergeGroup}
-              onDeleteDuplicates={handleDeleteDuplicates}
               onReviewDecisions={handleReviewDecisions}
             />
           ))}

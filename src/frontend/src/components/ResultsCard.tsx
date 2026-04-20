@@ -50,7 +50,6 @@ interface ResultsCardProps {
   index: number;
   onDismiss: (groupId: string) => void;
   onMerge: (groupId: string) => void;
-  onDeleteDuplicates: (groupId: string) => void;
   onReviewDecisions: (groupId: string, recordIdsToDelete: string[]) => void;
 }
 
@@ -59,7 +58,6 @@ export function ResultsCard({
   index,
   onDismiss,
   onMerge,
-  onDeleteDuplicates,
   onReviewDecisions,
 }: ResultsCardProps) {
   const { original, similar, topScore } = group;
@@ -67,9 +65,9 @@ export function ResultsCard({
   const simClass = getSimilarityClass(topScore);
   const simLabel = getSimilarityLabel(topScore);
   const [isReviewing, setIsReviewing] = useState(false);
-  const [recordsMarkedForDeletion, setRecordsMarkedForDeletion] = useState<string[]>(
-    [],
-  );
+  const [recordsMarkedForDeletion, setRecordsMarkedForDeletion] = useState<
+    string[]
+  >([]);
 
   const indicatorColor =
     level === "high"
@@ -92,19 +90,17 @@ export function ResultsCard({
     });
   };
 
-  const handleDeleteDuplicates = () => {
-    onDeleteDuplicates(group.id);
-    toast.success("Duplicate records deleted", {
-      description: "The original record was kept and the duplicates were removed.",
-    });
-  };
-
   const toggleRecordDecision = (recordId: string) => {
     setRecordsMarkedForDeletion((current) =>
       current.includes(recordId)
         ? current.filter((id) => id !== recordId)
         : [...current, recordId],
     );
+  };
+
+  const stopReview = () => {
+    setRecordsMarkedForDeletion([]);
+    setIsReviewing(false);
   };
 
   const handleApplyReview = () => {
@@ -148,7 +144,9 @@ export function ResultsCard({
           <span className="font-display font-semibold text-foreground">
             Duplicate Match
           </span>
-          <Badge className={cn("rounded-full border-0 px-2.5 py-0.5 text-xs", simClass)}>
+          <Badge
+            className={cn("rounded-full border-0 px-2.5 py-0.5 text-xs", simClass)}
+          >
             {simLabel}
           </Badge>
         </div>
@@ -156,7 +154,10 @@ export function ResultsCard({
           <span className="font-display text-lg font-bold text-foreground sm:text-xl">
             {topScore}%
           </span>
-          <span className={cn("h-2.5 w-2.5 rounded-full", indicatorColor)} title={simLabel} />
+          <span
+            className={cn("h-2.5 w-2.5 rounded-full", indicatorColor)}
+            title={simLabel}
+          />
         </div>
       </div>
 
@@ -191,6 +192,18 @@ export function ResultsCard({
               ))}
             </div>
           )}
+
+          {isReviewing && (
+            <div className="rounded-xl border border-border/60 bg-background/60 px-4 py-3">
+              <Badge className="border-0 bg-primary/15 text-primary">
+                Keep base record
+              </Badge>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Review mode is active. Use the controls beside each matched record
+                to decide what gets deleted.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3 p-5">
@@ -198,134 +211,86 @@ export function ResultsCard({
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Potential Matches
             </span>
-            <span className="text-base">{getLanguageFlag(similar[0]?.record.language ?? "en")}</span>
+            <span className="text-base">
+              {getLanguageFlag(similar[0]?.record.language ?? "en")}
+            </span>
           </div>
 
           <div className="space-y-3">
-            {similar.map((s, si) => (
-              <div
-                key={s.record.id}
-                className={cn(
-                  "space-y-1 pb-3",
-                  si < similar.length - 1 && "border-b border-border/60",
-                )}
-              >
-                <div className="mb-1 flex items-center gap-1.5">
-                  <span className="text-xs">{getLanguageFlag(s.record.language)}</span>
-                  <span className="font-mono text-xs uppercase text-muted-foreground">
-                    {s.record.language}
-                  </span>
+            {similar.map((s, si) => {
+              const markedForDeletion = recordsMarkedForDeletion.includes(
+                s.record.id,
+              );
+
+              return (
+                <div
+                  key={s.record.id}
+                  className={cn(
+                    "space-y-1 pb-3",
+                    si < similar.length - 1 && "border-b border-border/60",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                        <span className="text-xs">
+                          {getLanguageFlag(s.record.language)}
+                        </span>
+                        <span className="font-mono text-xs uppercase text-muted-foreground">
+                          {s.record.language}
+                        </span>
+                        {isReviewing && (
+                          <Badge
+                            className={cn(
+                              "border-0",
+                              markedForDeletion
+                                ? "bg-destructive/15 text-destructive"
+                                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
+                            )}
+                          >
+                            {markedForDeletion ? "Will delete" : "Will keep"}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="break-words text-sm font-medium leading-relaxed text-foreground">
+                        <HighlightedText
+                          text={s.record.name}
+                          tokens={s.matchedTokens}
+                        />
+                      </p>
+                      <p className="line-clamp-1 text-xs text-muted-foreground">
+                        <HighlightedText
+                          text={s.record.description}
+                          tokens={s.matchedTokens}
+                        />
+                      </p>
+                      {s.translatedName && (
+                        <p className="text-xs italic text-muted-foreground opacity-70">
+                          â‰ˆ {s.translatedName}
+                        </p>
+                      )}
+                    </div>
+
+                    {isReviewing && (
+                      <Button
+                        type="button"
+                        variant={markedForDeletion ? "outline" : "destructive"}
+                        size="sm"
+                        onClick={() => toggleRecordDecision(s.record.id)}
+                        className="shrink-0 self-start"
+                      >
+                        {markedForDeletion ? "Keep" : "Delete"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <p className="break-words text-sm font-medium leading-relaxed text-foreground">
-                  <HighlightedText text={s.record.name} tokens={s.matchedTokens} />
-                </p>
-                <p className="line-clamp-1 text-xs text-muted-foreground">
-                  <HighlightedText text={s.record.description} tokens={s.matchedTokens} />
-                </p>
-                {s.translatedName && (
-                  <p className="text-xs italic text-muted-foreground opacity-70">
-                    ≈ {s.translatedName}
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {isReviewing && (
-        <div className="border-t border-border bg-muted/5 px-5 py-4 sm:px-6">
-          <div className="space-y-3">
-            <div>
-              <h3 className="font-display text-base font-semibold text-foreground">
-                Review duplicate records
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Review all matched records below, then choose whether to keep or delete the duplicate entries.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-background/60 px-4 py-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm">{getLanguageFlag(original.language)}</span>
-                    <span className="font-mono text-xs uppercase text-muted-foreground">
-                      {original.language}
-                    </span>
-                    <Badge className="border-0 bg-primary/15 text-primary">
-                      Keep base record
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-foreground">{original.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{original.description}</p>
-                </div>
-              </div>
-              {similar.map(({ record }) => {
-                const markedForDeletion = recordsMarkedForDeletion.includes(record.id);
-
-                return (
-                  <div
-                    key={record.id}
-                    className="flex items-start justify-between gap-4 rounded-xl border border-border/60 bg-background/60 px-4 py-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm">{getLanguageFlag(record.language)}</span>
-                        <span className="font-mono text-xs uppercase text-muted-foreground">
-                          {record.language}
-                        </span>
-                        <Badge
-                          className={cn(
-                            "border-0",
-                            markedForDeletion
-                              ? "bg-destructive/15 text-destructive"
-                              : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-300",
-                          )}
-                        >
-                          {markedForDeletion ? "Will delete" : "Will keep"}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 text-sm font-medium text-foreground">{record.name}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{record.description}</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant={markedForDeletion ? "outline" : "destructive"}
-                      size="sm"
-                      onClick={() => toggleRecordDecision(record.id)}
-                      className="shrink-0"
-                    >
-                      {markedForDeletion ? "Keep" : "Delete"}
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRecordsMarkedForDeletion([]);
-                  setIsReviewing(false);
-                }}
-                className="w-full sm:w-auto"
-              >
-                Keep All
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleApplyReview}
-                className="btn-primary w-full border-0 text-primary-foreground sm:w-auto"
-              >
-                Apply Decisions
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3 border-t border-border bg-muted/10 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+      <div className="flex flex-col gap-3 border-t border-border bg-muted/10 px-5 py-4 sm:flex-row sm:flex-wrap sm:justify-end sm:px-6">
         <Button
           variant="outline"
           size="sm"
@@ -339,13 +304,40 @@ export function ResultsCard({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setIsReviewing((value) => !value)}
+          onClick={() => {
+            setIsReviewing((value) => {
+              const nextValue = !value;
+              if (!nextValue) {
+                setRecordsMarkedForDeletion([]);
+              }
+              return nextValue;
+            });
+          }}
           data-ocid={`results.review_button.${index}`}
           className="w-full text-muted-foreground hover:text-foreground sm:w-auto"
         >
           <Eye className="mr-2 h-4 w-4" />
-          Review
+          {isReviewing ? "Cancel Review" : "Review"}
         </Button>
+        {isReviewing && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={stopReview}
+              className="w-full sm:w-auto"
+            >
+              Keep All
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleApplyReview}
+              className="btn-primary w-full border-0 text-primary-foreground sm:w-auto"
+            >
+              Apply Decisions
+            </Button>
+          </>
+        )}
         <Button
           size="sm"
           onClick={handleMerge}

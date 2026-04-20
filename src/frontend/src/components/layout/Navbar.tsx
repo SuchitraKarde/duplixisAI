@@ -1,6 +1,7 @@
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/store/useAppStore";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Cpu, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -9,6 +10,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const resetDetection = useAppStore((state) => state.resetDetection);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -51,7 +53,11 @@ export function Navbar() {
           {/* Actions */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Link to="/detect" data-ocid="navbar.try-now.button">
+            <Link
+              to="/detect"
+              onClick={() => resetDetection()}
+              data-ocid="navbar.try-now.button"
+            >
               <Button
                 size="sm"
                 className="hidden sm:flex btn-primary border-0 text-primary-foreground"
@@ -85,7 +91,7 @@ export function Navbar() {
           data-ocid="navbar.mobile-menu"
         >
           <nav className="flex flex-col p-3 gap-1">
-            <Link to="/detect" className="mt-1">
+            <Link to="/detect" onClick={() => resetDetection()} className="mt-1">
               <Button
                 className="w-full btn-primary border-0 text-primary-foreground"
                 size="sm"

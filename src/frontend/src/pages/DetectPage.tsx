@@ -6,13 +6,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppStore } from "@/store/useAppStore";
 import { Keyboard, Upload } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type InputMode = "file" | "manual";
 
 export function DetectPage() {
   const [mode, setMode] = useState<InputMode>("file");
   const { isProcessing, detectionResults } = useAppStore();
+
+  useEffect(() => {
+    if (!detectionResults && !isProcessing) {
+      setMode("file");
+    }
+  }, [detectionResults, isProcessing]);
 
   // Results view
   if (detectionResults && !isProcessing) {
