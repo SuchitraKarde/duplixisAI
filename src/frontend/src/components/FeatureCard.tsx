@@ -52,14 +52,14 @@ export function FeatureCard({
             "transition-smooth shadow-sm",
           )}
         >
-          <Icon className="w-6 h-6 text-primary" />
+          <Icon className="w-6 h-6 text-primary transition-smooth group-hover:text-black dark:group-hover:text-white" />
         </div>
 
         <div className="space-y-2">
-          <h3 className="font-display font-semibold text-foreground text-base tracking-tight dark:group-hover:text-black">
+          <h3 className="font-display text-base font-semibold tracking-tight text-foreground transition-smooth group-hover:text-black dark:group-hover:text-white">
             {title}
           </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed dark:group-hover:text-black/80">
+          <p className="text-sm leading-relaxed text-muted-foreground transition-smooth group-hover:text-black/80 dark:group-hover:text-white/85">
             {description}
           </p>
         </div>
@@ -67,10 +67,12 @@ export function FeatureCard({
         {/* Optional stat */}
         {stat && (
           <div className="pt-2 border-t border-border/40 flex items-baseline gap-1.5">
-            <span className="font-display text-xl font-bold text-accent-ai dark:group-hover:text-black">
+            <span className="font-display text-xl font-bold text-accent-ai transition-smooth group-hover:text-black dark:group-hover:text-white">
               {stat.value}
             </span>
-            <span className="text-xs text-muted-foreground dark:group-hover:text-black/70">{stat.label}</span>
+            <span className="text-xs text-muted-foreground transition-smooth group-hover:text-black/70 dark:group-hover:text-white/75">
+              {stat.label}
+            </span>
           </div>
         )}
       </div>

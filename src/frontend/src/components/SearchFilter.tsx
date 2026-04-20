@@ -32,13 +32,13 @@ export function SearchFilter() {
     >
       {/* Search input */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-primary/80 pointer-events-none" />
         <Input
           placeholder="Search records by name or content..."
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
           data-ocid="results.search.search_input"
-          className="pl-9 glass-card"
+          className="pl-10 glass-card"
           aria-label="Search duplicate records"
         />
       </div>

@@ -15,9 +15,9 @@ const FEATURES = [
     icon: Globe,
     title: "Multilingual NLP",
     description:
-      "Detects duplicates across 10+ languages including English, Japanese, Chinese, and Arabic using advanced transformer models.",
+      "Detects duplicates across 108 languages including English, Japanese, Chinese, and Arabic using advanced transformer models.",
     gradient: "from-primary/20 to-accent/10",
-    stat: { value: "10+", label: "languages" },
+    stat: { value: "108", label: "languages" },
   },
   {
     icon: Zap,
